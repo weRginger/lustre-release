@@ -1,0 +1,29 @@
+SUBDIRS = linux util
+DIST_SUBDIRS = linux util
+
+libcfsdir = $(includedir)/libcfs
+
+if UTILS
+libcfs_HEADERS = types.h
+endif
+
+EXTRA_DIST = \
+	bitmap.h \
+	byteorder.h \
+	curproc.h \
+	libcfs.h \
+	libcfs_cpu.h \
+	libcfs_crypto.h \
+	libcfs_debug.h \
+	libcfs_fail.h \
+	libcfs_hash.h \
+	libcfs_heap.h \
+	libcfs_ioctl.h \
+	libcfs_prim.h \
+	libcfs_private.h \
+	libcfs_string.h \
+	libcfs_time.h \
+	libcfs_workitem.h \
+	list.h \
+	types.h \
+	user-time.h
