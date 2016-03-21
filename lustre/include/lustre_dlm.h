@@ -900,9 +900,7 @@ struct ldlm_lock {
 	 */
 	struct list_head	l_exp_list;
 	
-	/**
- 	 * ziqi: add a new variable to test passing client's CC data through lock to ldlm 
- 	 */
+	/* ziqi: collaborative cache related metadata */
 	int l_cc;
 };
 

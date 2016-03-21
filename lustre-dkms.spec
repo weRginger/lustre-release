@@ -1,0 +1,144 @@
+%bcond_without servers
+
+# Set the package name prefix
+%if %{with servers}
+    %define module  lustre
+%else
+    %define module  lustre-client
+%endif
+
+%define buildid 1
+
+Name:           %{module}-dkms
+
+Version:        2.8.50
+Release:        %{buildid}%{?dist}
+Summary:        Kernel module(s) (dkms)
+
+Group:          System Environment/Kernel
+License:        GPLv2+
+URL:            http://lustre.opensfs.org/
+Source0:        lustre-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildArch:      noarch
+
+# DKMS >= 2.2.0.3-28.git.7c3e7c5 to fully support inter-modules deps
+# (ie, "BUILD_DEPENDS[#]=<pkg>"), and have latest DKMS fixes integrated
+# for bugs that prevented our module to build/install.
+Requires:       dkms >= 2.2.0.3-28.git.7c3e7c5
+%if %{with servers}
+# Only zfs Lustre DKMS Server is supported
+Requires:       spl-dkms >= 0.6.1
+Requires:       zfs-dkms >= 0.6.1
+Requires:       %{module}-osd-zfs-mount
+%endif
+Requires:       gcc, make, perl
+Requires:       kernel-devel
+Provides:       %{module}-kmod = %{version}
+Provides:       %{module}-modules = %{version}
+%if %{with servers}
+# Only zfs Lustre DKMS Server is supported
+Provides:       %{module}-osd-zfs = %{version}
+Provides:       %{module}-osd
+%endif
+
+%description
+This package contains the dkms Lustre kernel modules.
+
+%prep
+%setup -q -n lustre-%{version}
+
+%build
+cat << EOF > dkms.conf
+# Embryonic lustre-dkms dkms.conf to allow for on-target accurate and full
+# version re-create during first run of Lustre DKMS module build step.
+PACKAGE_NAME=%{module}
+PACKAGE_VERSION=%{version}
+PACKAGE_CONFIG="/etc/sysconfig/lustre"
+PRE_BUILD="lustre-dkms_pre-build.sh \$module \$module_version \$kernelver \
+	 \$kernel_source_dir \$arch \$source_tree \$dkms_tree"
+POST_BUILD="lustre-dkms_post-build.sh \$module \$module_version \$kernelver \
+	 \$kernel_source_dir \$arch \$source_tree \$dkms_tree"
+EOF
+%if %{with servers}
+cat << EOF >> dkms.conf
+BUILD_DEPENDS[0]="zfs"
+EOF
+%endif
+cat << EOF >> dkms.conf
+AUTOINSTALL="yes"
+REMAKE_INITRD="no"
+MAKE[0]="make"
+# just have to set STRIP[0], it will become the new default.
+STRIP[0]="\$(
+  [[ -r \${PACKAGE_CONFIG} ]] \\
+  && source \${PACKAGE_CONFIG} \\
+  && shopt -q -s extglob \\
+  && [[ \${LUSTRE_DKMS_DISABLE_STRIP,,} == @(y|yes) ]] \\
+  && echo -n no
+)"
+
+# at least one module's set of BUILT_MODULE_NAME[]/BUILT_MODULE_LOCATION[]
+# elements, along with an install path made of either "extra" or "updates"
+# subdir in its DEST_MODULE_LOCATION[] element, are required to fake during
+# dkms.conf validity checks of "dkms [add,build]" steps.
+# Final/full correct BUILT_MODULE_NAME[]/BUILT_MODULE_LOCATION[]/
+# DEST_MODULE_LOCATION[] sets of values for all modules will be fixed during
+# on-target post-configure run of dkms.mkconf as part of build step.
+# it must be for a module shared by both lustre[-client]-dkms packages.
+BUILT_MODULE_NAME[\${#BUILT_MODULE_NAME[@]}]="lustre"
+BUILT_MODULE_LOCATION[\${#BUILT_MODULE_LOCATION[@]}]="lustre/llite/"
+DEST_MODULE_LOCATION[\${#DEST_MODULE_LOCATION[@]}]="/extra/lustre/"
+EOF
+
+sed -i 's/BUILDID[[:print:]]*/BUILDID = %{buildid}/' META
+sed -i 's/PRISTINE[[:print:]]*/PRISTINE = 1/' META
+cp META ldiskfs/META
+
+%install
+if [ "$RPM_BUILD_ROOT" != "/" ]; then
+    rm -rf $RPM_BUILD_ROOT
+fi
+mkdir -p $RPM_BUILD_ROOT/usr/src/
+cp -rfp ${RPM_BUILD_DIR}/lustre-%{version} $RPM_BUILD_ROOT/usr/src/
+%if %{without servers}
+# To have the directory reflect the DKMS RPM name!
+mv $RPM_BUILD_ROOT/usr/src/lustre-%{version} $RPM_BUILD_ROOT/usr/src/%{module}-%{version}
+%endif
+
+%clean
+if [ "$RPM_BUILD_ROOT" != "/" ]; then
+    rm -rf $RPM_BUILD_ROOT
+fi
+
+%files
+%defattr(-,root,root)
+/usr/src/%{module}-%{version}
+
+%post
+for POSTINST in /usr/lib/dkms/common.postinst; do
+    if [ -f $POSTINST ]; then
+        $POSTINST %{module} %{version}
+        exit $?
+    fi
+    echo "WARNING: $POSTINST does not exist."
+done
+echo -e "ERROR: DKMS version is too old and %{module} was not"
+echo -e "built with legacy DKMS support."
+echo -e "You must either rebuild %{module} with legacy postinst"
+echo -e "support or upgrade DKMS to a more current version."
+exit 1
+
+%preun
+dkms remove -m %{module} -v %{version} --all --rpm_safe_upgrade
+exit 0
+
+%changelog
+* Sat Jan 23 2016 Bruno Faccini <bruno.faccini@intel.com>
+ - detect and handle cases where [spl,zfs]-dkms packages are not built
+ - also handle on-target configure issues
+* Wed Oct  7 2015 Bruno Faccini <bruno.faccini@intel.com>
+ - adapted for Lustre Client DKMS creation
+ - allow for on-target reconfig to prevent static deps requires
+* Fri Apr  8 2013 Brian Behlendorf <behlendorf1@llnl.gov> - 2.3.63-1
+- First DKMS packages.

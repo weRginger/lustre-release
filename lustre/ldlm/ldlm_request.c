@@ -574,6 +574,9 @@ int ldlm_cli_enqueue_fini(struct obd_export *exp, struct ptlrpc_request *req,
 	if (reply == NULL)
 		GOTO(cleanup, rc = -EPROTO);
 
+	/* ziqi: get the return l_cc value from server */
+	printk("ldlm_cli_enqueue_fini(): reply->lock_desc.l_cc = %d\n", reply->lock_desc.l_cc);
+
 	if (lvb_len > 0) {
 		int size = 0;
 
@@ -926,7 +929,7 @@ int ldlm_cli_enqueue(struct obd_export *exp, struct ptlrpc_request **reqp,
 	lock->l_flags |= (*flags & (LDLM_FL_NO_LRU | LDLM_FL_EXCL));
         lock->l_last_activity = cfs_time_current_sec();
 	/* ziqi: test passing cc lock info from client to server */
-	lock->l_cc = 888;
+	lock->l_cc = 666;
 
         /* lock not sent to server yet */
 

@@ -1321,7 +1321,7 @@ int ldlm_handle_enqueue0(struct ldlm_namespace *ns,
         LDLM_DEBUG(lock, "server-side enqueue handler, new lock created");
 
 	lock->l_cc = dlm_req->lock_desc.l_cc;
-	printk("Inside ldlm_handle_enqueue0(): lock->l_cc = %d\n", lock->l_cc);
+	printk("ldlm_handle_enqueue0(): lock->l_cc = %d\n", lock->l_cc);
 
 	/* Initialize resource lvb but not for a lock being replayed since
 	 * Client already got lvb sent in this case.
@@ -1411,6 +1411,10 @@ existing_lock:
            request both in reply to client and in our own lock flags. */
 	dlm_rep->lock_flags = ldlm_flags_to_wire(flags);
 	lock->l_flags |= flags & LDLM_FL_INHERIT_MASK;
+
+	/* ziqi: set l_cc in the reply lock to client */
+	dlm_rep->lock_desc.l_cc = 233;
+	printk("ldlm_handle_enqueue0(): dlm_rep->lock_desc.l_cc = %d\n", dlm_rep->lock_desc.l_cc);
 
         /* Don't move a pending lock onto the export if it has already been
          * disconnected due to eviction (bug 5683) or server umount (bug 24324).

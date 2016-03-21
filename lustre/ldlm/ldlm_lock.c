@@ -652,9 +652,8 @@ void ldlm_lock2desc(struct ldlm_lock *lock, struct ldlm_lock_desc *desc)
 				    &lock->l_policy_data,
 				    &desc->l_policy_data);
 
-	/* ziqi: test l_cc lock info */
+	/* ziqi: pass l_cc from lock to desc */
 	desc->l_cc = lock->l_cc;
-	printk("Inside ldlm_lock2desc(), which change to desc lock structure: desc->l_cc = %d\n", desc->l_cc);
 }
 
 /**

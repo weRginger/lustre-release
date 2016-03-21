@@ -2897,7 +2897,7 @@ struct ldlm_lock_desc {
 	enum ldlm_mode l_req_mode;
 	enum ldlm_mode l_granted_mode;
 	union ldlm_wire_policy_data l_policy_data;
-	int l_cc;// ziqi: test passing CC info data from client to server
+	int l_cc; /*ziqi: collaborative cache related metadata */
 };
 
 #define LDLM_LOCKREQ_HANDLES 2

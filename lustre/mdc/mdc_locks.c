@@ -129,8 +129,6 @@ int mdc_set_lock_data(struct obd_export *exp, __u64 *lockh, void *data,
         if (bits)
                 *bits = lock->l_policy_data.l_inodebits.bits;
 
-	//lock->l_cc = 666;	
-
         unlock_res_and_lock(lock);
         LDLM_LOCK_PUT(lock);
 

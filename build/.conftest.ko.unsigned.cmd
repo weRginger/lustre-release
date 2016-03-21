@@ -1,0 +1,1 @@
+cmd_/home/build/lustre-release/build/conftest.ko.unsigned := /usr/bin/ld -m elf_x86_64 -r -m elf_x86_64 -T /home/build/kernel/rpmbuild/BUILD/kernel-2.6.32.431.29.2.el6_lustre/scripts/module-common.lds --build-id -o /home/build/lustre-release/build/conftest.ko.unsigned /home/build/lustre-release/build/conftest.o /home/build/lustre-release/build/conftest.mod.o 
