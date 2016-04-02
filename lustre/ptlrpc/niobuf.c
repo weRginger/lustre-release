@@ -84,6 +84,9 @@ static int ptl_send_buf (lnet_handle_md_t *mdh, void *base, int len,
 
         rc = LNetPut (conn->c_self, *mdh, ack,
                       conn->c_peer, portal, xid, offset, 0);
+	/* ziqi: test LNetPut*/
+	printk("ptl_send_buf(): in LNetPut conn->c_self = %llu\n", conn->c_self);
+
         if (unlikely(rc != 0)) {
                 int rc2;
                 /* We're going to get an UNLINK event when I unlink below,
