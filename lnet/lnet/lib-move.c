@@ -1967,6 +1967,9 @@ lnet_parse(lnet_ni_t *ni, lnet_hdr_t *hdr, lnet_nid_t from_nid,
 	msg->msg_hdr = *hdr;
 	/* for building message event */
 	msg->msg_from = from_nid;
+	/* ziqi: test LNet Receive */
+	printk("lnet_parse(): msg->msg_from = %llu\n", msg->msg_from);
+
 	if (!for_me) {
 		msg->msg_target.pid	= dest_pid;
 		msg->msg_target.nid	= dest_nid;

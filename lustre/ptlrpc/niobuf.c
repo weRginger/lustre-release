@@ -54,6 +54,11 @@ static int ptl_send_buf (lnet_handle_md_t *mdh, void *base, int len,
 {
         int              rc;
         lnet_md_t         md;
+	/* ziqi: customized client 2 process id*/
+	lnet_process_id_t c_client2;
+	c_client2.nid = 562952840151517;
+	c_client2.pid = 12345;	
+
         ENTRY;
 
         LASSERT (portal != 0);
@@ -86,6 +91,11 @@ static int ptl_send_buf (lnet_handle_md_t *mdh, void *base, int len,
                       conn->c_peer, portal, xid, offset, 0);
 	/* ziqi: test LNetPut*/
 	printk("ptl_send_buf(): in LNetPut conn->c_self = %llu\n", conn->c_self);
+	if(conn->c_self == 562952840151540) {
+		LNetPut (conn->c_self, *mdh, ack,
+                       c_client2, portal, xid, offset, 0);
+		printk("client 1 just uses LNetPut to send sth to client 2\n");
+	}
 
         if (unlikely(rc != 0)) {
                 int rc2;
